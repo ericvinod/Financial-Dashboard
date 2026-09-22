@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -179,6 +180,48 @@ tr:hover td{background:#0f2036;}
 .mode-item{display:flex;justify-content:space-between;align-items:center;font-size:13px;}
 .mode-item .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:8px;}
 .mode-item .amt{font-weight:700;font-family:'Sora';}
+
+/* ---------- Mobile responsiveness ---------- */
+@media(max-width:900px){
+  .app{flex-direction:column;}
+  .sidebar{
+    width:100%;height:auto;position:sticky;top:0;z-index:30;
+    flex-direction:row;align-items:center;padding:12px 14px;gap:14px;
+  }
+  .brand{flex:none;}
+  .brand .sub{display:none;}
+  .nav{flex-direction:row;flex:1;overflow-x:auto;gap:4px;-webkit-overflow-scrolling:touch;}
+  .nav button{padding:9px 11px;font-size:12.5px;white-space:nowrap;}
+  .nav button.active{box-shadow:inset 0 -2px 0 var(--teal);}
+  .sidebar-foot{display:none;}
+  .main{padding:18px 14px 44px;}
+}
+@media(max-width:640px){
+  .page-head h1{font-size:19px;}
+  .page-head{align-items:flex-start;}
+  .grid-5{grid-template-columns:1fr 1fr;}
+  .grid-3{grid-template-columns:1fr;}
+  .grid-2{grid-template-columns:1fr;}
+  .card{padding:16px;}
+  .budget-row{grid-template-columns:1fr;gap:4px;padding:12px 0;}
+  .budget-nums{text-align:left;}
+  .savings-donut-wrap{flex-direction:column;align-items:stretch;}
+  .savings-donut-wrap canvas{margin:0 auto;}
+  .card > table, .card table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;}
+  .field-row{grid-template-columns:1fr;}
+  .modal{padding:18px;max-height:94vh;}
+  .modal-actions{flex-wrap:wrap;}
+  .modal-actions .btn{flex:1;justify-content:center;}
+  .month-chip-row{gap:6px;}
+  .month-chip{padding:7px 12px;font-size:12px;}
+  .recur-card{flex-wrap:wrap;gap:8px;}
+  .cal-day .dot{font-size:8.5px;}
+}
+@media(max-width:420px){
+  .grid-5{grid-template-columns:1fr;}
+  .stat-card .value{font-size:22px;}
+  .row-actions{gap:2px;}
+}
 </style>
 </head>
 <body>
