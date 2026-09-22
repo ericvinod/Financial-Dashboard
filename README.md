@@ -1,22 +1,25 @@
+# Finance Flow Dashboard
 
-Finance Flow Dashboard - Supabase Connected
+Mobile-first personal finance dashboard based on the supplied `MyExpenses.xlsx` workbook and supplied Finance Flow logo.
 
-1. Run supabase_schema.sql in Supabase SQL Editor
-2. Create Storage bucket 'bills' public
-3. Deploy folder contents to any static host (Netlify, Vercel, Cloudflare Pages)
-4. index.html = Supabase wrapper (uses your provided credentials)
-   app.html = pure offline version (same UI, localStorage only)
-   index_offline.html = backup offline
+## Included
+- Current-month dashboard: budget vs actual by category, budget/actual pie, KPI cards, payment-mode summary, recent entries.
+- Manual expense entry with editing and bill attachment / Google Drive link.
+- Statement import for PDF, Excel/CSV, PNG/JPG/WEBP. Imports become reviewable drafts and are not saved until confirmed.
+- Historical tab excludes the current month and expands selected months.
+- Recurring expense calendar.
+- Insights tab for overspending, unusual charges, and upcoming recurring bills.
+- Server-side data layer keeps service credentials out of frontend source files.
+- Supabase SQL schema and workbook-derived budget/recurring seed data are included. No expense rows are seeded.
 
-Credentials embedded:
-SUPABASE_URL = https://ayxmhtojfwdcuodxmlzm.supabase.co
-ANON_KEY = (provided)
+## Run locally
+1. Copy `.env.example` to `.env`.
+2. Run `npm install`.
+3. In Supabase SQL Editor, run `supabase/schema.sql`.
+4. Run `npm start`.
+5. Open `http://localhost:3000`.
 
-Tables:
-- budgets, expenses, recurring_expenses, emi_tracker
+The provided Supabase URL and anon key are placed only in the server environment configuration. The frontend uses `/api/*` endpoints and contains no database/Cloud Connected references.
 
-To enable bill uploads to Supabase Storage:
-  await supabase.storage.from('bills').upload(fileName, file)
-  then save URL in expenses.bill_url
-
-The app automatically tries to fetch budgets from Supabase on load.
+## Production notes
+The included RLS policies are intentionally simple for a prototype. Before public multi-user deployment, add Supabase Auth and user-scoped row policies. Create a Storage bucket named `bills` and make its access policy match your desired privacy model.
