@@ -1,16 +1,16 @@
 {
   "name": "Finance Flow Dashboard",
   "short_name": "FinanceFlow",
-  "description": "Mobile-friendly Budget vs Actuals and Wealth Flow Tracker",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#10b981",
+  "background_color": "#0a1e32",
+  "theme_color": "#14b8a6",
   "icons": [
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
