@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Finance Flow Dashboard</title>
+<meta name="theme-color" content="#0A1E2C">
+
+<link rel="icon" href="assets/logo-32.png">
+<link rel="apple-touch-icon" href="assets/logo-180.png">
+<link rel="manifest" href="manifest.json">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <img src="assets/logo.png" alt="Finance Flow">
+    <div class="brand">Finance Flow<small>Household budget dashboard</small></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- ============ DASHBOARD ============ -->
+  <div class="view active" id="view-dashboard">
+    <div class="section-title" id="dash-month">This month</div>
+
+    <div class="stat-strip">
+      <div class="stat-card" id="income-card">
+        <div class="label">Monthly income</div>
+        <div class="value" id="stat-income">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Monthly outflow</div>
+        <div class="value" id="stat-outflow">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Net cash flow</div>
+        <div class="value" id="stat-net">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Savings rate</div>
+        <div class="value" id="stat-rate">0%</div>
+      </div>
+      <div class="stat-card wide">
+        <span class="label">Import a card statement</span>
+        <button class="btn small" id="import-btn">Import</button>
+      </div>
+    </div>
+
+    <div class="section-title">Budget vs actual</div>
+    <div class="panel">
+      <div style="display:flex;gap:10px">
+        <div class="chart-wrap small" style="flex:1"><canvas id="chart-budget-pie"></canvas><div style="text-align:center;font-size:11px;color:var(--text-dim);margin-top:-4px">Budget</div></div>
+        <div class="chart-wrap small" style="flex:1"><canvas id="chart-actual-pie"></canvas><div style="text-align:center;font-size:11px;color:var(--text-dim);margin-top:-4px">Actual</div></div>
+      </div>
+      <div id="cat-rows" style="margin-top:14px"></div>
+    </div>
+
+    <div class="section-title">Spend by payment mode</div>
+    <div class="panel">
+      <div class="chart-wrap small"><canvas id="chart-mode-pie"></canvas></div>
+      <div id="mode-rows" style="margin-top:10px"></div>
+    </div>
+
+    <div class="section-title">Entries this month</div>
+    <div id="entries-list"></div>
+  </div>
+
+  <!-- ============ HISTORY ============ -->
+  <div class="view" id="view-history">
+    <div class="section-title">Spending trend</div>
+    <div class="panel" id="history-trend-wrap">
+      <div class="chart-wrap"><canvas id="chart-trend"></canvas></div>
+    </div>
+    <div class="section-title">Past months</div>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- ============ RECURRING ============ -->
+  <div class="view" id="view-recurring">
+    <div class="section-title">Bill calendar</div>
+    <div class="panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <button class="btn small secondary" id="cal-prev">‹</button>
+        <b id="cal-label" style="font-size:13.5px"></b>
+        <button class="btn small secondary" id="cal-next">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="section-title">Due this month</div>
+    <div class="panel"><div id="due-list"></div></div>
+
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>All recurring bills</span>
+      <button class="btn small" id="add-recurring-btn">+ Add</button>
+    </div>
+    <div class="panel"><div id="all-recurring"></div></div>
+
+    <div class="section-title">Active card EMIs</div>
+    <div class="panel"><div id="emi-list"></div></div>
+  </div>
+
+  <!-- ============ INSIGHTS ============ -->
+  <div class="view" id="view-insights">
+    <div class="section-title">Alerts &amp; takeaways</div>
+    <div id="insights-list"></div>
+  </div>
+
+  <button class="fab" id="fab">+</button>
+
+  <div class="tabbar">
+    <button id="tab-dashboard" class="active"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</button>
+    <button id="tab-history"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 17l5-6 4 4 8-10"/><path d="M14 5h6v6"/></svg>History</button>
+    <button id="tab-recurring"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Recurring</button>
+    <button id="tab-insights"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/><path d="M9 21h6"/></svg>Insights</button>
+  </div>
+</div>
+
+<!-- ============ Add / edit entry sheet ============ -->
+<div class="overlay" id="entry-overlay">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="entry-sheet-title">Add entry</h3><button class="close-x" data-close="entry-overlay">✕</button></div>
+    <form id="entry-form">
+      <label>Date</label><input type="date" id="f-date" required>
+      <label>Expense description</label><input type="text" id="f-desc" placeholder="e.g. Vegetables from market" required>
+      <label>Category</label><select id="f-category"></select>
+      <label>Paid by</label><select id="f-paidby"></select>
+      <label>Amount</label><input type="number" id="f-amount" placeholder="0" required>
+      <label>Notes (optional)</label><textarea id="f-notes"></textarea>
+      <label>Attach a bill (optional)</label>
+      <input type="file" id="f-file" accept=".pdf,image/*">
+      <label>Or paste a Google Drive link</label>
+      <input type="text" id="f-drivelink" placeholder="https://drive.google.com/...">
+      <div id="bill-preview"></div>
+      <button class="btn" type="submit">Save entry</button>
+      <button class="btn secondary danger" id="entry-delete" type="button" style="display:none;color:var(--coral)">Delete entry</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ Import statement sheet ============ -->
+<div class="overlay" id="import-overlay">
+  <div class="sheet">
+    <div class="sheet-head"><h3>Import a statement</h3><button class="close-x" data-close="import-overlay">✕</button></div>
+    <p class="progress-note">Upload a PDF, Excel, or photo of a statement. We'll read it and let you check everything before it's saved.</p>
+    <div class="import-grid">
+      <label class="import-source">SBI<input type="file" accept=".pdf,.xlsx,.xls,.csv,image/*" data-source="sbi" data-paidby="SBI"></label>
+      <label class="import-source">Amazon Pay ICICI<input type="file" accept=".pdf,.xlsx,.xls,.csv,image/*" data-source="amazon_pay_icici" data-paidby="Amazon Pay ICICI"></label>
+      <label class="import-source">HDFC Swiggy<input type="file" accept=".pdf,.xlsx,.xls,.csv,image/*" data-source="hdfc_swiggy" data-paidby="HDFC Swiggy"></label>
+      <label class="import-source">Other<input type="file" accept=".pdf,.xlsx,.xls,.csv,image/*" data-source="manual" data-paidby="Others"></label>
+    </div>
+    <p class="progress-note" id="import-progress"></p>
+    <div id="import-review"></div>
+    <button class="btn" id="import-confirm" style="display:none">Save these entries</button>
+  </div>
+</div>
+
+<!-- ============ Income sheet ============ -->
+<div class="overlay" id="income-overlay">
+  <div class="sheet">
+    <div class="sheet-head"><h3>Monthly income</h3><button class="close-x" data-close="income-overlay">✕</button></div>
+    <div id="income-list"></div>
+    <label>Source</label><input type="text" id="income-source" placeholder="e.g. Salary, Freelance">
+    <label>Amount</label><input type="number" id="income-amount" placeholder="0">
+    <button class="btn" id="income-add" type="button">Add income</button>
+  </div>
+</div>
+
+<!-- ============ Recurring bill sheet ============ -->
+<div class="overlay" id="recurring-overlay">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="rec-title">Add recurring bill</h3><button class="close-x" data-close="recurring-overlay">✕</button></div>
+    <form id="recurring-form">
+      <label>Name</label><input type="text" id="rec-name" required>
+      <label>Next due date</label><input type="date" id="rec-date">
+      <label>For / person</label><input type="text" id="rec-person">
+      <label>Frequency</label>
+      <select id="rec-freq"><option>Monthly</option><option>Quarterly</option><option>Yearly</option></select>
+      <label>Amount (monthly equivalent)</label><input type="number" id="rec-amount">
+      <button class="btn" type="submit">Save</button>
+      <button class="btn secondary" id="rec-delete" type="button" style="display:none;color:var(--coral)">Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";</script>
+
+<script src="js/config.js"></script>
+<script src="js/store.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/history.js"></script>
+<script src="js/recurring.js"></script>
+<script src="js/insights.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
