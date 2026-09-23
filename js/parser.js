@@ -26,6 +26,12 @@ function guessCategory(text) {
 // reference number that follow it on the same line.
 const ICICI_LINE_RE = /(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})\s+(.+?)\s+([\d,]+\.\d{2}|[\d,]+)\s*(Dr|Cr)\.?\b/i;
 
+// Matches "15/08/2026 SOME MERCHANT TEXT 618.00" style lines (HDFC), where a
+// plain debit has no suffix at all and only credits/cashback end in " Cr".
+// Anchored to the end of the line since, unlike ICICI, nothing trails the
+// amount here.
+const HDFC_LINE_RE = /^(\d{1,2}\/\d{1,2}\/\d{2,4})\s+(.+?)\s+([\d,]+\.\d{2})\s*(Cr)?\s*$/i;
+
 // Matches "12 Sep 26 SOME MERCHANT TEXT 1,234.50 D" style lines (SBI), where
 // the suffix is a single letter: D = debit, M = EMI/installment charge,
 // C = credit/payment (skipped).
@@ -57,7 +63,7 @@ function normalizeDateSbi(dd, mon, yy) {
 // amount+suffix, so the regexes above always see one complete row.
 function mergeWrappedLines(lines) {
   const startsWithDate = l => /^\s*\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}\b/.test(l) || /^\s*\d{1,2}\s+[A-Za-z]{3}\s+\d{2}\b/.test(l);
-  const hasAmountSuffix = l => /[\d,]+\.\d{2}\s*(Dr|Cr)\b/i.test(l) || /[\d,]+\.\d{2}\s*\b[CDM]\b/.test(l);
+  const hasAmountSuffix = l => /[\d,]+\.\d{2}\s*(Dr|Cr)\b/i.test(l) || /[\d,]+\.\d{2}\s*\b[CDM]\b/.test(l) || /[\d,]+\.\d{2}\s*$/.test(l);
   const merged = [];
   let buffer = "";
   for (const raw of lines) {
@@ -111,6 +117,17 @@ function linesToEntries(lines, paidBy, source) {
       if (!amount || amount <= 0) continue;
       let entry_date;
       try { entry_date = normalizeDateSbi(dd, mon, yy); } catch { continue; }
+      out.push(makeDraftEntry(entry_date, desc, amount, paidBy, source));
+      continue;
+    }
+    m = line.match(HDFC_LINE_RE);
+    if (m) {
+      const [, dateRaw, desc, amtRaw, suffix] = m;
+      if (suffix) continue; // "Cr" = cashback/credit, skip
+      const amount = parseFloat(amtRaw.replace(/,/g, ""));
+      if (!amount || amount <= 0) continue;
+      let entry_date;
+      try { entry_date = normalizeDate(dateRaw); } catch { continue; }
       out.push(makeDraftEntry(entry_date, desc, amount, paidBy, source));
     }
   }

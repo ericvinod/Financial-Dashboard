@@ -5,8 +5,14 @@ const state = {
   month: monthKey(),
   editingId: null,
   pendingBill: null, // { url, type } for the entry currently being composed
-  importDraft: []    // rows staged from a statement, awaiting confirmation
+  importDraft: [],   // rows staged from a statement, awaiting confirmation
+  selectedMode: null // when set, the entries list is filtered to this payment mode
 };
+
+function selectMode(mode) {
+  state.selectedMode = state.selectedMode === mode ? null : mode;
+  renderDashboard();
+}
 
 function setStatus(text, cls) {
   const el = document.getElementById("status");

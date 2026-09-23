@@ -66,7 +66,7 @@ async function renderDashboard() {
   const modeRows = document.getElementById("mode-rows");
   const modeTotal = Object.values(byMode).reduce((a, b) => a + b, 0) || 1;
   modeRows.innerHTML = PAID_BY.map(m => `
-    <div class="cat-row">
+    <div class="cat-row" style="cursor:pointer;${state.selectedMode === m ? `outline:1.5px solid ${PAID_BY_COLORS[m]};border-radius:8px;padding:4px 6px;margin:0 -6px 12px` : ""}" onclick="selectMode('${m}')">
       <div class="cat-head">
         <span class="cat-name"><span class="dot" style="background:${PAID_BY_COLORS[m]}"></span>${m}</span>
         <span class="amounts"><b>${money(byMode[m])}</b></span>
@@ -81,10 +81,16 @@ async function renderDashboard() {
 
   // Entries list
   const list = document.getElementById("entries-list");
-  if (!entries.length) {
-    list.innerHTML = `<div class="empty"><div class="big">🧾</div><p>No entries yet this month.<br>Tap + to add one, or import a statement.</p></div>`;
+  const shownEntries = state.selectedMode ? entries.filter(e => e.paid_by === state.selectedMode) : entries;
+  const filterNote = state.selectedMode
+    ? `<div class="progress-note" style="margin-bottom:8px">Showing <b>${state.selectedMode}</b> only — <a href="#" onclick="selectMode('${state.selectedMode}');return false">show all</a></div>`
+    : "";
+  if (!shownEntries.length) {
+    list.innerHTML = filterNote + (entries.length
+      ? `<div class="empty"><div class="big">🔍</div><p>No entries for ${state.selectedMode} this month.</p></div>`
+      : `<div class="empty"><div class="big">🧾</div><p>No entries yet this month.<br>Tap + to add one, or import a statement.</p></div>`);
   } else {
-    list.innerHTML = entries.map(e => `
+    list.innerHTML = filterNote + shownEntries.map(e => `
       <div class="entry" style="border-left-color:${CATEGORY_COLORS[e.category]}">
         <div class="row1"><span class="desc">${escapeHtml(e.description)}</span><span class="amt">${money(e.amount)}</span></div>
         <div class="meta">
