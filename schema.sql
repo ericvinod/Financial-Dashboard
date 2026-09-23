@@ -85,7 +85,8 @@ insert into budgets (category, amount) values
   ('Petrol', 8000),
   ('Vegetable and Groceries', 18000),
   ('Mobile', 1692),
-  ('WiFi', 1200)
+  ('WiFi', 1200),
+  ('NOT Budgeted', 0)
 on conflict (category) do nothing;
 
 -- Seed this month's income baseline
