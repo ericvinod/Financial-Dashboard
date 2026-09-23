@@ -134,13 +134,14 @@ a { color: var(--teal); }
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
+  overflow: hidden;
   padding: 14px;
   margin-bottom: 12px;
 }
 
 .panel h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
 
-.chart-wrap { position: relative; height: 220px; }
+.chart-wrap { position: relative; height: 220px; overflow: hidden; }
 .chart-wrap.small { height: 170px; }
 
 /* ---------- Budget vs actual rows ---------- */
