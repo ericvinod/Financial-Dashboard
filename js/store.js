@@ -35,21 +35,24 @@ const Store = {
   },
 
   async addExpenses(entries) {
-    const rows = entries.map(e => ({
-      id: uid(),
-      entry_date: e.entry_date,
-      month: e.entry_date.slice(0, 7),
-      description: e.description,
-      category: e.category,
-      paid_by: e.paid_by,
-      amount: e.amount,
-      notes: e.notes || null,
-      bill_url: e.bill_url || null,
-      bill_type: e.bill_type || null,
-      source: e.source || "manual"
-    }));
+    const rows = entries
+      .filter(e => e && e.entry_date && e.description && e.category && e.paid_by && Number(e.amount) > 0)
+      .map(e => ({
+        id: uid(),
+        entry_date: e.entry_date,
+        month: e.entry_date.slice(0, 7),
+        description: e.description,
+        category: e.category,
+        paid_by: e.paid_by,
+        amount: Number(e.amount),
+        notes: e.notes || null,
+        bill_url: e.bill_url || null,
+        bill_type: e.bill_type || null,
+        source: e.source || "manual"
+      }));
+    if (!rows.length) throw new Error("None of these rows have a date, description and amount — nothing to save.");
     const { error } = await db.from("expenses").insert(rows);
-    if (error) throw new Error("Could not save the imported entries.");
+    if (error) throw new Error("Could not save the imported entries: " + error.message);
     return rows;
   },
 

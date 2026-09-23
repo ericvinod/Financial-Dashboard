@@ -33,8 +33,9 @@ async function renderDashboard() {
     const actual = actualByCat[cat] || 0;
     const pct = budget ? Math.min(100, (actual / budget) * 100) : (actual ? 100 : 0);
     const over = budget && actual > budget;
+    const selected = state.selectedCategory === cat;
     return `
-      <div class="cat-row">
+      <div class="cat-row" style="cursor:pointer;${selected ? `outline:1.5px solid ${CATEGORY_COLORS[cat]};border-radius:8px;padding:4px 6px;margin:0 -6px 12px` : ""}" onclick="selectCategory('${cat}')">
         <div class="cat-head">
           <span class="cat-name"><span class="dot" style="background:${CATEGORY_COLORS[cat]}"></span>${cat}</span>
           <span class="amounts"><b>${money(actual)}</b> / ${money(budget)}</span>
@@ -81,13 +82,19 @@ async function renderDashboard() {
 
   // Entries list
   const list = document.getElementById("entries-list");
-  const shownEntries = state.selectedMode ? entries.filter(e => e.paid_by === state.selectedMode) : entries;
-  const filterNote = state.selectedMode
-    ? `<div class="progress-note" style="margin-bottom:8px">Showing <b>${state.selectedMode}</b> only — <a href="#" onclick="selectMode('${state.selectedMode}');return false">show all</a></div>`
+  let shownEntries = entries;
+  if (state.selectedMode) shownEntries = shownEntries.filter(e => e.paid_by === state.selectedMode);
+  if (state.selectedCategory) shownEntries = shownEntries.filter(e => e.category === state.selectedCategory);
+  const activeFilters = [
+    state.selectedCategory ? { label: state.selectedCategory, clear: () => `selectCategory('${state.selectedCategory}')` } : null,
+    state.selectedMode ? { label: state.selectedMode, clear: () => `selectMode('${state.selectedMode}')` } : null
+  ].filter(Boolean);
+  const filterNote = activeFilters.length
+    ? `<div class="progress-note" style="margin-bottom:8px">Showing ${activeFilters.map(f => `<b>${f.label}</b>`).join(" + ")} only — <a href="#" onclick="${activeFilters.map(f => f.clear()).join(";")};return false">show all</a></div>`
     : "";
   if (!shownEntries.length) {
     list.innerHTML = filterNote + (entries.length
-      ? `<div class="empty"><div class="big">🔍</div><p>No entries for ${state.selectedMode} this month.</p></div>`
+      ? `<div class="empty"><div class="big">🔍</div><p>No matching entries this month.</p></div>`
       : `<div class="empty"><div class="big">🧾</div><p>No entries yet this month.<br>Tap + to add one, or import a statement.</p></div>`);
   } else {
     list.innerHTML = filterNote + shownEntries.map(e => `

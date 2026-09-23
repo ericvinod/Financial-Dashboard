@@ -6,11 +6,17 @@ const state = {
   editingId: null,
   pendingBill: null, // { url, type } for the entry currently being composed
   importDraft: [],   // rows staged from a statement, awaiting confirmation
-  selectedMode: null // when set, the entries list is filtered to this payment mode
+  selectedMode: null,    // when set, the entries list is filtered to this payment mode
+  selectedCategory: null // when set, the entries list is filtered to this category
 };
 
 function selectMode(mode) {
   state.selectedMode = state.selectedMode === mode ? null : mode;
+  renderDashboard();
+}
+
+function selectCategory(cat) {
+  state.selectedCategory = state.selectedCategory === cat ? null : cat;
   renderDashboard();
 }
 
@@ -226,7 +232,11 @@ document.querySelectorAll(".import-source input[type=file]").forEach(input => {
 
 document.getElementById("import-confirm").addEventListener("click", async () => {
   if (!state.importDraft.length) return;
-  await withStatus(() => Store.addExpenses(state.importDraft));
+  try {
+    await withStatus(() => Store.addExpenses(state.importDraft));
+  } catch {
+    return; // withStatus already showed the error toast
+  }
   closeSheet("import-overlay");
   toast(`${state.importDraft.length} entries added`);
   renderDashboard();
