@@ -149,8 +149,25 @@ function openImportSheet() {
   document.getElementById("import-progress").textContent = "";
   document.getElementById("import-review").innerHTML = "";
   document.getElementById("import-confirm").style.display = "none";
+
+  const overlay = document.getElementById("import-overlay");
+  const pop = overlay.querySelector(".popover");
+  const btn = document.getElementById("import-btn");
+  const r = btn.getBoundingClientRect();
+  const popWidth = Math.min(340, window.innerWidth * 0.92);
+  let left = r.right - popWidth;
+  left = Math.max(8, Math.min(left, window.innerWidth - popWidth - 8));
+  const top = Math.min(r.bottom + 8, window.innerHeight - 60);
+  pop.style.left = left + "px";
+  pop.style.top = top + "px";
+
   openSheet("import-overlay");
 }
+
+// Clicking the transparent backdrop (but not the popover itself) closes it.
+document.getElementById("import-overlay").addEventListener("click", e => {
+  if (e.target.id === "import-overlay") closeSheet("import-overlay");
+});
 
 async function handleStatementFile(file, source, paidBy) {
   const progressEl = document.getElementById("import-progress");
@@ -181,7 +198,7 @@ function renderImportReview() {
       <select onchange="state.importDraft[${i}].category=this.value">
         ${CATEGORIES.map(c => `<option ${c === r.category ? "selected" : ""}>${c}</option>`).join("")}
       </select>
-      <input type="number" value="${r.amount}" style="width:90px" onchange="state.importDraft[${i}].amount=parseFloat(this.value)">
+      <input type="number" value="${r.amount}" step="0.01" style="width:90px" onchange="state.importDraft[${i}].amount=parseFloat(this.value)">
       <button class="btn small ghost" onclick="removeImportRow(${i})">✕</button>
     </div>
   `).join("");

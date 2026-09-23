@@ -20,9 +20,18 @@ function guessCategory(text) {
   return "Home Expenses";
 }
 
-// Matches "12/08/2026 SOME MERCHANT TEXT 1,234.50" style lines, tolerant of
-// dashes/dots in the date and an optional Dr/Cr suffix on the amount.
-const LINE_RE = /(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})\s+(.+?)\s+([\d,]+\.\d{2}|[\d,]+)\s*(Dr|Cr|DR|CR)?\s*$/;
+// Matches "12-08-2026 SOME MERCHANT TEXT 1,234.50 Dr. 14 14184731013" style
+// lines (ICICI). The suffix (Dr/Cr) is REQUIRED right after the amount, so
+// the amount can never be confused with trailing reward points or a
+// reference number that follow it on the same line.
+const ICICI_LINE_RE = /(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})\s+(.+?)\s+([\d,]+\.\d{2}|[\d,]+)\s*(Dr|Cr)\.?\b/i;
+
+// Matches "12 Sep 26 SOME MERCHANT TEXT 1,234.50 D" style lines (SBI), where
+// the suffix is a single letter: D = debit, M = EMI/installment charge,
+// C = credit/payment (skipped).
+const SBI_LINE_RE = /(\d{1,2})\s+([A-Za-z]{3})\s+(\d{2})\s+(.+?)\s+([\d,]+\.\d{2}|[\d,]+)\s*\b([CDM])\b/;
+
+const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
 
 function normalizeDate(raw) {
   const parts = raw.split(/[\/\-.]/).map(p => p.trim());
@@ -36,27 +45,74 @@ function normalizeDate(raw) {
   return `${year}-${month}-${day}`;
 }
 
+function normalizeDateSbi(dd, mon, yy) {
+  const m = MONTHS[mon.slice(0, 3).toLowerCase()];
+  if (!m) throw new Error("Unrecognized month");
+  return `20${yy}-${String(m).padStart(2, "0")}-${dd.padStart(2, "0")}`;
+}
+
+// Bank statement tables sometimes wrap a single transaction's description
+// across two or three lines of extracted text. Re-join everything under a
+// date-starting line until we hit a line that actually contains an
+// amount+suffix, so the regexes above always see one complete row.
+function mergeWrappedLines(lines) {
+  const startsWithDate = l => /^\s*\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}\b/.test(l) || /^\s*\d{1,2}\s+[A-Za-z]{3}\s+\d{2}\b/.test(l);
+  const hasAmountSuffix = l => /[\d,]+\.\d{2}\s*(Dr|Cr)\b/i.test(l) || /[\d,]+\.\d{2}\s*\b[CDM]\b/.test(l);
+  const merged = [];
+  let buffer = "";
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (startsWithDate(line)) {
+      if (buffer) merged.push(buffer);
+      buffer = line;
+    } else if (buffer) {
+      buffer += " " + line;
+    } else {
+      continue;
+    }
+    if (buffer && hasAmountSuffix(buffer)) { merged.push(buffer); buffer = ""; }
+  }
+  if (buffer) merged.push(buffer);
+  return merged;
+}
+
+function makeDraftEntry(entry_date, rawDesc, amount, paidBy, source) {
+  return {
+    entry_date,
+    description: rawDesc.trim().replace(/\s{2,}/g, " "),
+    category: guessCategory(rawDesc),
+    paid_by: paidBy,
+    amount,
+    notes: "",
+    source
+  };
+}
+
 function linesToEntries(lines, paidBy, source) {
   const out = [];
-  for (const line of lines) {
-    const m = line.match(LINE_RE);
-    if (!m) continue;
-    const [, dateRaw, desc, amtRaw, suffix] = m;
-    if (/Cr\b/i.test(suffix || "")) continue; // skip payments/credits/refunds
-    const amount = parseFloat(amtRaw.replace(/,/g, ""));
-    if (!amount || amount <= 0) continue;
-    let entry_date;
-    try { entry_date = normalizeDate(dateRaw); } catch { continue; }
-    const description = desc.trim().replace(/\s{2,}/g, " ");
-    out.push({
-      entry_date,
-      description,
-      category: guessCategory(description),
-      paid_by: paidBy,
-      amount,
-      notes: "",
-      source
-    });
+  for (const line of mergeWrappedLines(lines)) {
+    let m = line.match(ICICI_LINE_RE);
+    if (m) {
+      const [, dateRaw, desc, amtRaw, suffix] = m;
+      if (/^cr$/i.test(suffix)) continue; // skip payments/credits/refunds
+      const amount = parseFloat(amtRaw.replace(/,/g, ""));
+      if (!amount || amount <= 0) continue;
+      let entry_date;
+      try { entry_date = normalizeDate(dateRaw); } catch { continue; }
+      out.push(makeDraftEntry(entry_date, desc, amount, paidBy, source));
+      continue;
+    }
+    m = line.match(SBI_LINE_RE);
+    if (m) {
+      const [, dd, mon, yy, desc, amtRaw, suffix] = m;
+      if (suffix === "C") continue; // skip payments/credits
+      const amount = parseFloat(amtRaw.replace(/,/g, ""));
+      if (!amount || amount <= 0) continue;
+      let entry_date;
+      try { entry_date = normalizeDateSbi(dd, mon, yy); } catch { continue; }
+      out.push(makeDraftEntry(entry_date, desc, amount, paidBy, source));
+    }
   }
   return out;
 }

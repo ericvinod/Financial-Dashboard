@@ -51,12 +51,12 @@ async function renderDashboard() {
   charts.budgetPie = new Chart(document.getElementById("chart-budget-pie"), {
     type: "pie",
     data: { labels: catsWithData, datasets: [{ data: catsWithData.map(c => budgets[c] || 0), backgroundColor: colors, borderWidth: 0 }] },
-    options: pieOpts()
+    options: miniPieOpts()
   });
   charts.actualPie = new Chart(document.getElementById("chart-actual-pie"), {
     type: "pie",
     data: { labels: catsWithData, datasets: [{ data: catsWithData.map(c => actualByCat[c] || 0), backgroundColor: colors, borderWidth: 0 }] },
-    options: pieOpts()
+    options: miniPieOpts()
   });
 
   // Spend by payment mode
@@ -96,6 +96,13 @@ async function renderDashboard() {
         </div>
       </div>`).join("");
   }
+}
+
+function miniPieOpts() {
+  // No per-chart legend on purpose: the category rows just below already
+  // show each color next to its name, and skipping the legend here means
+  // both pies get the exact same layout, so they line up with each other.
+  return { maintainAspectRatio: false, layout: { padding: 4 }, plugins: { legend: { display: false } } };
 }
 
 function pieOpts() {
