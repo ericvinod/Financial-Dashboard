@@ -11,9 +11,10 @@ async function renderDashboard() {
     Store.getIncome(state.month)
   ]);
   const entries = allEntries.filter(e => isInCurrentCycle(e.entry_date, e.paid_by));
+  const displayEntries = entries;
 
   const totalIncome = income.reduce((s, r) => s + Number(r.amount), 0);
-  const totalOutflow = entries.reduce((s, e) => s + Number(e.amount), 0);
+  const totalOutflow = displayEntries.reduce((s, e) => s + Number(e.amount), 0);
   const net = totalIncome - totalOutflow;
   const savingsRate = totalIncome ? (net / totalIncome) * 100 : 0;
 
@@ -26,7 +27,7 @@ async function renderDashboard() {
 
   // Budget vs actual per category
   const actualByCat = {};
-  entries.forEach(e => { actualByCat[e.category] = (actualByCat[e.category] || 0) + Number(e.amount); });
+  displayEntries.forEach(e => { actualByCat[e.category] = (actualByCat[e.category] || 0) + Number(e.amount); });
 
   const catRows = document.getElementById("cat-rows");
   catRows.innerHTML = CATEGORIES.map(cat => {
@@ -64,7 +65,7 @@ async function renderDashboard() {
   // Spend by payment mode
   const byMode = {};
   PAID_BY.forEach(m => (byMode[m] = 0));
-  entries.forEach(e => { byMode[e.paid_by] = (byMode[e.paid_by] || 0) + Number(e.amount); });
+  displayEntries.forEach(e => { byMode[e.paid_by] = (byMode[e.paid_by] || 0) + Number(e.amount); });
   const modeRows = document.getElementById("mode-rows");
   const modeTotal = Object.values(byMode).reduce((a, b) => a + b, 0) || 1;
   modeRows.innerHTML = PAID_BY.map(m => `
@@ -83,8 +84,7 @@ async function renderDashboard() {
 
   // Entries list
   const list = document.getElementById("entries-list");
-  const filtering = !!(state.selectedMode || state.selectedCategory);
-  let shownEntries = filtering ? allEntries : entries;
+  let shownEntries = displayEntries;
   if (state.selectedMode) shownEntries = shownEntries.filter(e => e.paid_by === state.selectedMode);
   if (state.selectedCategory) shownEntries = shownEntries.filter(e => e.category === state.selectedCategory);
   shownEntries = shownEntries.slice().sort((a, b) => b.entry_date.localeCompare(a.entry_date));
@@ -93,7 +93,7 @@ async function renderDashboard() {
     state.selectedMode ? { label: state.selectedMode, clear: () => `selectMode('${state.selectedMode}')` } : null
   ].filter(Boolean);
   const filterNote = activeFilters.length
-    ? `<div class="progress-note" style="margin-bottom:8px">Showing ${activeFilters.map(f => `<b>${f.label}</b>`).join(" + ")} (all dates) — <a href="#" onclick="${activeFilters.map(f => f.clear()).join(";")};return false">show all</a></div>`
+    ? `<div class="progress-note" style="margin-bottom:8px">Showing ${activeFilters.map(f => `<b>${f.label}</b>`).join(" + ")} only — <a href="#" onclick="${activeFilters.map(f => f.clear()).join(";")};return false">show all</a></div>`
     : "";
   if (!shownEntries.length) {
     list.innerHTML = filterNote + (entries.length
