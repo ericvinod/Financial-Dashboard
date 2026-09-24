@@ -95,9 +95,20 @@ function makeDraftEntry(entry_date, rawDesc, amount, paidBy, source) {
   };
 }
 
+// Account-summary tables (Payment Due Date / Total Dues / Minimum Amount Due,
+// etc.) sometimes contain a date next to two plain numbers, which can look
+// just like a transaction row. Skip everything before the real transaction
+// table starts, so only genuine line items ever reach the regexes above.
+const TXN_TABLE_HEADER_RE = /transaction\s*(detail|description)s?|domestic\s*transactions/i;
+
+function stripBeforeTransactionTable(lines) {
+  const idx = lines.findIndex(l => TXN_TABLE_HEADER_RE.test(l));
+  return idx === -1 ? lines : lines.slice(idx + 1);
+}
+
 function linesToEntries(lines, paidBy, source) {
   const out = [];
-  for (const line of mergeWrappedLines(lines)) {
+  for (const line of mergeWrappedLines(stripBeforeTransactionTable(lines))) {
     let m = line.match(ICICI_LINE_RE);
     if (m) {
       const [, dateRaw, desc, amtRaw, suffix] = m;

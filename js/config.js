@@ -60,8 +60,8 @@ function uid() {
 // statement cycle runs on its own dates. Cash/GPAY and Others use the plain
 // calendar month (no entry needed below).
 const CYCLE_RULES = {
-  "Amazon Pay ICICI": { startDay: 20, endDay: 19 }, // 20th of previous month to 19th of this month
-  "SBI": { startDay: 11, endDay: 12 },              // 11th of previous month to 12th of this month
+  "Amazon Pay ICICI": { startDay: 19, endDay: 19 }, // 19th of previous month to 19th of this month
+  "SBI": { startDay: 12, endDay: 12 },               // 12th of previous month to 12th of this month
   "HDFC Swiggy": { startDay: 15, endDay: 15 }        // 15th of previous month to 15th of this month
 };
 

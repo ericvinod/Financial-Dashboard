@@ -83,19 +83,21 @@ async function renderDashboard() {
 
   // Entries list
   const list = document.getElementById("entries-list");
-  let shownEntries = entries;
+  const filtering = !!(state.selectedMode || state.selectedCategory);
+  let shownEntries = filtering ? allEntries : entries;
   if (state.selectedMode) shownEntries = shownEntries.filter(e => e.paid_by === state.selectedMode);
   if (state.selectedCategory) shownEntries = shownEntries.filter(e => e.category === state.selectedCategory);
+  shownEntries = shownEntries.slice().sort((a, b) => b.entry_date.localeCompare(a.entry_date));
   const activeFilters = [
     state.selectedCategory ? { label: state.selectedCategory, clear: () => `selectCategory('${state.selectedCategory}')` } : null,
     state.selectedMode ? { label: state.selectedMode, clear: () => `selectMode('${state.selectedMode}')` } : null
   ].filter(Boolean);
   const filterNote = activeFilters.length
-    ? `<div class="progress-note" style="margin-bottom:8px">Showing ${activeFilters.map(f => `<b>${f.label}</b>`).join(" + ")} only — <a href="#" onclick="${activeFilters.map(f => f.clear()).join(";")};return false">show all</a></div>`
+    ? `<div class="progress-note" style="margin-bottom:8px">Showing ${activeFilters.map(f => `<b>${f.label}</b>`).join(" + ")} (all dates) — <a href="#" onclick="${activeFilters.map(f => f.clear()).join(";")};return false">show all</a></div>`
     : "";
   if (!shownEntries.length) {
     list.innerHTML = filterNote + (entries.length
-      ? `<div class="empty"><div class="big">🔍</div><p>No matching entries this month.</p></div>`
+      ? `<div class="empty"><div class="big">🔍</div><p>No matching entries.</p></div>`
       : `<div class="empty"><div class="big">🧾</div><p>No entries yet this month.<br>Tap + to add one, or import a statement.</p></div>`);
   } else {
     list.innerHTML = filterNote + shownEntries.map(e => `
