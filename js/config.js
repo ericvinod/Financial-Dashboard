@@ -55,3 +55,32 @@ function money(n) {
 function uid() {
   return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
+
+// "This month" isn't the same window for every payment mode — each card's
+// statement cycle runs on its own dates. Cash/GPAY and Others use the plain
+// calendar month (no entry needed below).
+const CYCLE_RULES = {
+  "Amazon Pay ICICI": { startDay: 20, endDay: 19 }, // 20th of previous month to 19th of this month
+  "SBI": { startDay: 11, endDay: 12 },              // 11th of previous month to 12th of this month
+  "HDFC Swiggy": { startDay: 15, endDay: 15 }        // 15th of previous month to 15th of this month
+};
+
+// Returns [start, end] Date objects (inclusive) for the cycle that contains `today`.
+function currentCycleRange(paidBy, today = new Date()) {
+  const rule = CYCLE_RULES[paidBy];
+  const y = today.getFullYear(), m = today.getMonth();
+  if (!rule) {
+    return [new Date(y, m, 1), new Date(y, m + 1, 0)]; // plain calendar month
+  }
+  const endThisMonth = new Date(y, m, rule.endDay);
+  if (today <= endThisMonth) return [new Date(y, m - 1, rule.startDay), endThisMonth];
+  return [new Date(y, m, rule.startDay), new Date(y, m + 1, rule.endDay)];
+}
+
+// Is this entry inside its own payment mode's *current* billing cycle?
+function isInCurrentCycle(entryDateStr, paidBy, today = new Date()) {
+  const [start, end] = currentCycleRange(paidBy, today);
+  const d = new Date(entryDateStr + "T00:00:00");
+  return d >= new Date(start.getFullYear(), start.getMonth(), start.getDate())
+      && d <= new Date(end.getFullYear(), end.getMonth(), end.getDate());
+}

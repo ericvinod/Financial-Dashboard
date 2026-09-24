@@ -1,11 +1,11 @@
 async function renderInsights() {
   const box = document.getElementById("insights-list");
-  const [entries, budgets, recurring, all] = await Promise.all([
-    Store.listExpenses(state.month),
+  const [budgets, recurring, all] = await Promise.all([
     Store.getBudgets(),
     Store.listRecurring(),
     Store.listAllExpenses()
   ]);
+  const entries = all.filter(e => isInCurrentCycle(e.entry_date, e.paid_by));
 
   const insights = [];
 
@@ -45,11 +45,12 @@ async function renderInsights() {
   });
 
   // Month-over-month takeaways
-  const months = [...new Set(all.map(e => e.month))].filter(m => m !== state.month).sort();
+  const nonCurrent = all.filter(e => !isInCurrentCycle(e.entry_date, e.paid_by));
+  const months = [...new Set(nonCurrent.map(e => e.month))].sort();
   const lastMonth = months[months.length - 1];
   if (lastMonth) {
     const lastByCat = {};
-    all.filter(e => e.month === lastMonth).forEach(e => { lastByCat[e.category] = (lastByCat[e.category] || 0) + Number(e.amount); });
+    nonCurrent.filter(e => e.month === lastMonth).forEach(e => { lastByCat[e.category] = (lastByCat[e.category] || 0) + Number(e.amount); });
     const deltas = CATEGORIES.map(cat => {
       const prev = lastByCat[cat] || 0;
       const curr = actualByCat[cat] || 0;

@@ -5,11 +5,12 @@ async function renderDashboard() {
   const view = document.getElementById("view-dashboard");
   document.getElementById("dash-month").textContent = monthLabel(state.month);
 
-  const [entries, budgets, income] = await Promise.all([
-    Store.listExpenses(state.month),
+  const [allEntries, budgets, income] = await Promise.all([
+    Store.listAllExpenses(),
     Store.getBudgets(),
     Store.getIncome(state.month)
   ]);
+  const entries = allEntries.filter(e => isInCurrentCycle(e.entry_date, e.paid_by));
 
   const totalIncome = income.reduce((s, r) => s + Number(r.amount), 0);
   const totalOutflow = entries.reduce((s, e) => s + Number(e.amount), 0);

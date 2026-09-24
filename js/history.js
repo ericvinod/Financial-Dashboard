@@ -4,7 +4,7 @@ async function renderHistory() {
   const all = await Store.listAllExpenses();
   const byMonth = {};
   all.forEach(e => {
-    if (e.month === state.month) return; // current month lives on the dashboard
+    if (isInCurrentCycle(e.entry_date, e.paid_by)) return; // current cycle lives on the dashboard
     (byMonth[e.month] = byMonth[e.month] || []).push(e);
   });
   const months = Object.keys(byMonth).sort();
