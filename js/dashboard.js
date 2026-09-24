@@ -65,7 +65,10 @@ async function renderDashboard() {
   // Spend by payment mode
   const byMode = {};
   PAID_BY.forEach(m => (byMode[m] = 0));
-  displayEntries.forEach(e => { byMode[e.paid_by] = (byMode[e.paid_by] || 0) + Number(e.amount); });
+  displayEntries.forEach(e => {
+    const key = PAID_BY.includes(e.paid_by) ? e.paid_by : "Others";
+    byMode[key] = (byMode[key] || 0) + Number(e.amount);
+  });
   const modeRows = document.getElementById("mode-rows");
   const modeTotal = Object.values(byMode).reduce((a, b) => a + b, 0) || 1;
   modeRows.innerHTML = PAID_BY.map(m => `
@@ -85,7 +88,7 @@ async function renderDashboard() {
   // Entries list
   const list = document.getElementById("entries-list");
   let shownEntries = displayEntries;
-  if (state.selectedMode) shownEntries = shownEntries.filter(e => e.paid_by === state.selectedMode);
+  if (state.selectedMode) shownEntries = shownEntries.filter(e => (PAID_BY.includes(e.paid_by) ? e.paid_by : "Others") === state.selectedMode);
   if (state.selectedCategory) shownEntries = shownEntries.filter(e => e.category === state.selectedCategory);
   shownEntries = shownEntries.slice().sort((a, b) => b.entry_date.localeCompare(a.entry_date));
   const activeFilters = [
