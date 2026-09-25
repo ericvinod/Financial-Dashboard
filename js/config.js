@@ -65,7 +65,14 @@ const CYCLE_RULES = {
   "HDFC Swiggy": { startDay: 15, endDay: 15 }        // 15th of previous month to 15th of this month
 };
 
-// Returns [start, end] Date objects (inclusive) for the cycle that contains `today`.
+function addDays(date, n) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate() + n);
+  return d;
+}
+
+// Returns [start, end] Date objects (inclusive) for the cycle that contains
+// `today`. The cutoff day itself always belongs to the cycle it CLOSES, not
+// the one that opens after it — cycles are back-to-back with no shared day.
 function currentCycleRange(paidBy, today = new Date()) {
   const rule = CYCLE_RULES[paidBy];
   const y = today.getFullYear(), m = today.getMonth();
@@ -73,8 +80,12 @@ function currentCycleRange(paidBy, today = new Date()) {
     return [new Date(y, m, 1), new Date(y, m + 1, 0)]; // plain calendar month
   }
   const endThisMonth = new Date(y, m, rule.endDay);
-  if (today <= endThisMonth) return [new Date(y, m - 1, rule.startDay), endThisMonth];
-  return [new Date(y, m, rule.startDay), new Date(y, m + 1, rule.endDay)];
+  if (today <= endThisMonth) {
+    const endPrevMonth = new Date(y, m - 1, rule.startDay);
+    return [addDays(endPrevMonth, 1), endThisMonth];
+  }
+  const endNextMonth = new Date(y, m + 1, rule.endDay);
+  return [addDays(endThisMonth, 1), endNextMonth];
 }
 
 // Is this entry inside its own payment mode's *current* billing cycle?
