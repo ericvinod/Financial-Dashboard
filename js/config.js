@@ -58,34 +58,24 @@ function uid() {
 
 // "This month" isn't the same window for every payment mode — each card's
 // statement cycle runs on its own dates. Cash/GPAY and Others use the plain
-// calendar month (no entry needed below).
+// calendar month (no entry needed below). Each value is the cutoff day that
+// closes one cycle and opens the next.
 const CYCLE_RULES = {
-  "Amazon Pay ICICI": { startDay: 19, endDay: 19 }, // 19th of previous month to 19th of this month
-  "SBI": { startDay: 12, endDay: 12 },               // 12th of previous month to 12th of this month
-  "HDFC Swiggy": { startDay: 15, endDay: 15 }        // 15th of previous month to 15th of this month
+  "Amazon Pay ICICI": 19,
+  "SBI": 12,
+  "HDFC Swiggy": 15
 };
 
-function addDays(date, n) {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate() + n);
-  return d;
-}
-
-// Returns [start, end] Date objects (inclusive) for the cycle that contains
-// `today`. The cutoff day itself always belongs to the cycle it CLOSES, not
-// the one that opens after it — cycles are back-to-back with no shared day.
+// Returns [start, end] Date objects (inclusive) for the given payment mode's
+// cycle that belongs to the calendar month `today` falls in — e.g. for SBI
+// (cutoff 12) in September, that's always 12 Aug → 12 Sep, whether today is
+// Sep 1 or Sep 30. This is anchored to the calendar month, not a rolling
+// window from today's exact day.
 function currentCycleRange(paidBy, today = new Date()) {
-  const rule = CYCLE_RULES[paidBy];
+  const cutoff = CYCLE_RULES[paidBy];
   const y = today.getFullYear(), m = today.getMonth();
-  if (!rule) {
-    return [new Date(y, m, 1), new Date(y, m + 1, 0)]; // plain calendar month
-  }
-  const endThisMonth = new Date(y, m, rule.endDay);
-  if (today <= endThisMonth) {
-    const endPrevMonth = new Date(y, m - 1, rule.startDay);
-    return [addDays(endPrevMonth, 1), endThisMonth];
-  }
-  const endNextMonth = new Date(y, m + 1, rule.endDay);
-  return [addDays(endThisMonth, 1), endNextMonth];
+  if (cutoff === undefined) return [new Date(y, m, 1), new Date(y, m + 1, 0)]; // plain calendar month
+  return [new Date(y, m - 1, cutoff), new Date(y, m, cutoff)];
 }
 
 // Is this entry inside its own payment mode's *current* billing cycle?
@@ -94,4 +84,21 @@ function isInCurrentCycle(entryDateStr, paidBy, today = new Date()) {
   const d = new Date(entryDateStr + "T00:00:00");
   return d >= new Date(start.getFullYear(), start.getMonth(), start.getDate())
       && d <= new Date(end.getFullYear(), end.getMonth(), end.getDate());
+}
+
+// Which reporting month (YYYY-MM) does this entry belong to, per its own
+// payment mode's cycle? E.g. for SBI (cutoff 12), an entry dated Aug 20
+// falls after August's cutoff, so it belongs to September's cycle (12 Aug →
+// 12 Sep) and is reported as "2026-09", not "2026-08". Used by History and
+// Insights so a whole statement reports under one consistent month even
+// though its transactions span two calendar months.
+function cycleMonthKey(entryDateStr, paidBy) {
+  const cutoff = CYCLE_RULES[paidBy];
+  const d = new Date(entryDateStr + "T00:00:00");
+  let y = d.getFullYear(), m = d.getMonth(); // 0-based
+  if (cutoff !== undefined && d.getDate() > cutoff) {
+    m += 1;
+    if (m > 11) { m = 0; y += 1; }
+  }
+  return `${y}-${String(m + 1).padStart(2, "0")}`;
 }

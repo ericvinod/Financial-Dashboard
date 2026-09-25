@@ -46,11 +46,11 @@ async function renderInsights() {
 
   // Month-over-month takeaways
   const nonCurrent = all.filter(e => !isInCurrentCycle(e.entry_date, e.paid_by));
-  const months = [...new Set(nonCurrent.map(e => e.month))].sort();
+  const months = [...new Set(nonCurrent.map(e => cycleMonthKey(e.entry_date, e.paid_by)))].sort();
   const lastMonth = months[months.length - 1];
   if (lastMonth) {
     const lastByCat = {};
-    nonCurrent.filter(e => e.month === lastMonth).forEach(e => { lastByCat[e.category] = (lastByCat[e.category] || 0) + Number(e.amount); });
+    nonCurrent.filter(e => cycleMonthKey(e.entry_date, e.paid_by) === lastMonth).forEach(e => { lastByCat[e.category] = (lastByCat[e.category] || 0) + Number(e.amount); });
     const deltas = CATEGORIES.map(cat => {
       const prev = lastByCat[cat] || 0;
       const curr = actualByCat[cat] || 0;

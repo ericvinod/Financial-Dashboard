@@ -16,14 +16,12 @@ async function renderDashboard() {
   const totalIncome = income.reduce((s, r) => s + Number(r.amount), 0);
   const totalOutflow = displayEntries.reduce((s, e) => s + Number(e.amount), 0);
   const net = totalIncome - totalOutflow;
-  const savingsRate = totalIncome ? (net / totalIncome) * 100 : 0;
 
   document.getElementById("stat-income").textContent = money(totalIncome);
   document.getElementById("stat-outflow").textContent = money(totalOutflow);
   const netEl = document.getElementById("stat-net");
   netEl.textContent = money(net);
   netEl.className = "value " + (net >= 0 ? "pos" : "neg");
-  document.getElementById("stat-rate").textContent = savingsRate.toFixed(1) + "%";
 
   // Budget vs actual per category
   const actualByCat = {};

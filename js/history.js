@@ -2,10 +2,12 @@ let openMonth = null;
 
 async function renderHistory() {
   const all = await Store.listAllExpenses();
+  const currentKey = monthKey();
   const byMonth = {};
   all.forEach(e => {
-    if (isInCurrentCycle(e.entry_date, e.paid_by)) return; // current cycle lives on the dashboard
-    (byMonth[e.month] = byMonth[e.month] || []).push(e);
+    const key = cycleMonthKey(e.entry_date, e.paid_by);
+    if (key === currentKey) return; // current cycle lives on the dashboard
+    (byMonth[key] = byMonth[key] || []).push(e);
   });
   const months = Object.keys(byMonth).sort();
 
@@ -72,7 +74,7 @@ function toggleMonth(m) {
   openMonth = m;
   pill.classList.add("open");
   detail.classList.add("open");
-  Store.listAllExpenses().then(all => renderMonthDetail(m, all.filter(e => e.month === m)));
+  Store.listAllExpenses().then(all => renderMonthDetail(m, all.filter(e => cycleMonthKey(e.entry_date, e.paid_by) === m)));
 }
 
 function renderMonthDetail(m, rows) {
