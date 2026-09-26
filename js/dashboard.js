@@ -33,6 +33,13 @@ async function renderDashboard() {
         onchange="Store.setUnbilledAmount('${card}', parseFloat(this.value) || 0).then(()=>toast('Saved')).catch(err=>toast(err.message))">
     </div>`).join("");
 
+  destroyChart("unbilledPie");
+  charts.unbilledPie = new Chart(document.getElementById("chart-unbilled-pie"), {
+    type: "pie",
+    data: { labels: CREDIT_CARDS, datasets: [{ data: CREDIT_CARDS.map(c => unbilled[c] || 0), backgroundColor: CREDIT_CARDS.map(c => PAID_BY_COLORS[c]), borderWidth: 0 }] },
+    options: pieOpts()
+  });
+
   // Budget vs actual per category
   const actualByCat = {};
   displayEntries.forEach(e => { actualByCat[e.category] = (actualByCat[e.category] || 0) + Number(e.amount); });

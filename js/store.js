@@ -144,7 +144,7 @@ const Store = {
 
   async getUnbilledAmounts() {
     const { data, error } = await db.from("unbilled_amounts").select("*");
-    if (error) throw new Error("Could not load unbilled amounts.");
+    if (error) { console.warn("unbilled_amounts unavailable:", error.message); return {}; }
     const map = {};
     (data || []).forEach(r => (map[r.card] = Number(r.amount)));
     return map;
