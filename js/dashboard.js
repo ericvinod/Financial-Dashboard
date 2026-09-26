@@ -30,7 +30,7 @@ async function renderDashboard() {
         <span class="cat-name"><span class="dot" style="background:${PAID_BY_COLORS[card]}"></span>${card}</span>
       </div>
       <input type="number" step="0.01" value="${unbilled[card] || ""}" placeholder="0"
-        onchange="Store.setUnbilledAmount('${card}', parseFloat(this.value) || 0).then(()=>toast('Saved')).catch(err=>toast(err.message))">
+        onchange="Store.setUnbilledAmount('${card}', parseFloat(this.value) || 0).then(()=>{toast('Saved');renderDashboard();}).catch(err=>toast(err.message))">
     </div>`).join("");
 
   destroyChart("unbilledPie");
