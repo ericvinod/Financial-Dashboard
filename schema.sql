@@ -60,11 +60,21 @@ create table if not exists credit_emi (
   emi_amount numeric
 );
 
+-- Unbilled amount per credit card, as of the end of its last closed billing
+-- cycle. This is manually entered by the user (e.g. read off the card's own
+-- app), not computed from imported entries.
+create table if not exists unbilled_amounts (
+  card text primary key,
+  amount numeric not null default 0,
+  updated_at timestamptz not null default now()
+);
+
 alter table income enable row level security;
 alter table budgets enable row level security;
 alter table expenses enable row level security;
 alter table recurring_expenses enable row level security;
 alter table credit_emi enable row level security;
+alter table unbilled_amounts enable row level security;
 
 -- Single-user setup: allow the anon key full access.
 -- Tighten these policies if you add real authentication later.
@@ -73,6 +83,7 @@ create policy "anon full access" on budgets for all using (true) with check (tru
 create policy "anon full access" on expenses for all using (true) with check (true);
 create policy "anon full access" on recurring_expenses for all using (true) with check (true);
 create policy "anon full access" on credit_emi for all using (true) with check (true);
+create policy "anon full access" on unbilled_amounts for all using (true) with check (true);
 
 -- Seed the budget baseline (from your original tracker)
 insert into budgets (category, amount) values
