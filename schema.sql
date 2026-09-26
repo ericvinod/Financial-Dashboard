@@ -78,11 +78,18 @@ alter table unbilled_amounts enable row level security;
 
 -- Single-user setup: allow the anon key full access.
 -- Tighten these policies if you add real authentication later.
+-- (drop-then-create so this script can be re-run safely any number of times)
+drop policy if exists "anon full access" on income;
 create policy "anon full access" on income for all using (true) with check (true);
+drop policy if exists "anon full access" on budgets;
 create policy "anon full access" on budgets for all using (true) with check (true);
+drop policy if exists "anon full access" on expenses;
 create policy "anon full access" on expenses for all using (true) with check (true);
+drop policy if exists "anon full access" on recurring_expenses;
 create policy "anon full access" on recurring_expenses for all using (true) with check (true);
+drop policy if exists "anon full access" on credit_emi;
 create policy "anon full access" on credit_emi for all using (true) with check (true);
+drop policy if exists "anon full access" on unbilled_amounts;
 create policy "anon full access" on unbilled_amounts for all using (true) with check (true);
 
 -- Seed the budget baseline (from your original tracker)
@@ -100,30 +107,44 @@ insert into budgets (category, amount) values
   ('NOT Budgeted', 0)
 on conflict (category) do nothing;
 
--- Seed this month's income baseline
+-- Seed this month's income baseline (only if it isn't already there)
 insert into income (month, source, amount)
-values (to_char(current_date, 'YYYY-MM'), 'Salary', 217000);
+select to_char(current_date, 'YYYY-MM'), 'Salary', 217000
+where not exists (
+  select 1 from income where month = to_char(current_date, 'YYYY-MM') and source = 'Salary'
+);
 
--- Seed recurring bills from your tracker
-insert into recurring_expenses (name, next_due, person, frequency, premium_amount, monthly_amount, sum_insured) values
-  ('LIC - Term Insurance - Amulya Jeevan', '2026-11-16', 'Savariraj Eric Vinod R', 'Yearly', 20250, 1688, '50 lakhs'),
-  ('Max Life Term Insurance', '2026-11-29', 'Josephine Veena', 'Yearly', 13490, 5266, '1 Crore'),
-  ('New India Assurance - Health Insurance', '2026-08-29', 'Savariraj Eric Vinod R, Rachael Antonia Kayal', 'Yearly', 14574, 1215, '5 lakhs'),
-  ('Car Insurance', '2026-08-04', 'Josephine Veena', 'Yearly', 5076, 423, '8 Lakhs'),
-  ('Bike Insurance', null, null, 'Yearly', null, null, null);
+-- Seed recurring bills from your tracker (only rows that aren't already there)
+insert into recurring_expenses (name, next_due, person, frequency, premium_amount, monthly_amount, sum_insured)
+select v.name, v.next_due, v.person, v.frequency, v.premium_amount, v.monthly_amount, v.sum_insured
+from (values
+  ('LIC - Term Insurance - Amulya Jeevan', '2026-11-16'::date, 'Savariraj Eric Vinod R', 'Yearly', 20250::numeric, 1688::numeric, '50 lakhs'),
+  ('Max Life Term Insurance', '2026-11-29'::date, 'Josephine Veena', 'Yearly', 13490::numeric, 5266::numeric, '1 Crore'),
+  ('New India Assurance - Health Insurance', '2026-08-29'::date, 'Savariraj Eric Vinod R, Rachael Antonia Kayal', 'Yearly', 14574::numeric, 1215::numeric, '5 lakhs'),
+  ('Car Insurance', '2026-08-04'::date, 'Josephine Veena', 'Yearly', 5076::numeric, 423::numeric, '8 Lakhs'),
+  ('Bike Insurance', null::date, null, 'Yearly', null::numeric, null::numeric, null)
+) as v(name, next_due, person, frequency, premium_amount, monthly_amount, sum_insured)
+where not exists (select 1 from recurring_expenses r where r.name = v.name);
 
--- Seed running credit-card EMIs
-insert into credit_emi (card, product, emi_no, emi_amount) values
-  ('ICICI', 'Eric''s phone', '21 of 24', 1113),
-  ('ICICI', 'Gadget', '06 of 06', 2146),
-  ('SBI', '1 AC', '04 of 06', 7154),
-  ('SBI', '2 AC', '04 of 06', 6537);
+-- Seed running credit-card EMIs (only rows that aren't already there)
+insert into credit_emi (card, product, emi_no, emi_amount)
+select v.card, v.product, v.emi_no, v.emi_amount
+from (values
+  ('ICICI', 'Eric''s phone', '21 of 24', 1113::numeric),
+  ('ICICI', 'Gadget', '06 of 06', 2146::numeric),
+  ('SBI', '1 AC', '04 of 06', 7154::numeric),
+  ('SBI', '2 AC', '04 of 06', 6537::numeric)
+) as v(card, product, emi_no, emi_amount)
+where not exists (select 1 from credit_emi c where c.card = v.card and c.product = v.product);
 
 -- Storage bucket for attached bills (run once; skip if it already exists)
 insert into storage.buckets (id, name, public)
 values ('bills', 'bills', true)
 on conflict (id) do nothing;
 
+drop policy if exists "anon read bills" on storage.objects;
 create policy "anon read bills" on storage.objects for select using (bucket_id = 'bills');
+drop policy if exists "anon write bills" on storage.objects;
 create policy "anon write bills" on storage.objects for insert with check (bucket_id = 'bills');
+drop policy if exists "anon update bills" on storage.objects;
 create policy "anon update bills" on storage.objects for update using (bucket_id = 'bills');
