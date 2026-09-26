@@ -5,10 +5,11 @@ async function renderDashboard() {
   const view = document.getElementById("view-dashboard");
   document.getElementById("dash-month").textContent = monthLabel(state.month);
 
-  const [allEntries, budgets, income] = await Promise.all([
+  const [allEntries, budgets, income, unbilled] = await Promise.all([
     Store.listAllExpenses(),
     Store.getBudgets(),
-    Store.getIncome(state.month)
+    Store.getIncome(state.month),
+    Store.getUnbilledAmounts()
   ]);
   const entries = allEntries.filter(e => isInCurrentCycle(e.entry_date, e.paid_by));
   const displayEntries = entries;
@@ -22,6 +23,15 @@ async function renderDashboard() {
   const netEl = document.getElementById("stat-net");
   netEl.textContent = money(net);
   netEl.className = "value " + (net >= 0 ? "pos" : "neg");
+
+  document.getElementById("unbilled-rows").innerHTML = CREDIT_CARDS.map(card => `
+    <div class="cat-row">
+      <div class="cat-head">
+        <span class="cat-name"><span class="dot" style="background:${PAID_BY_COLORS[card]}"></span>${card}</span>
+      </div>
+      <input type="number" step="0.01" value="${unbilled[card] || ""}" placeholder="0"
+        onchange="Store.setUnbilledAmount('${card}', parseFloat(this.value) || 0).then(()=>toast('Saved')).catch(err=>toast(err.message))">
+    </div>`).join("");
 
   // Budget vs actual per category
   const actualByCat = {};

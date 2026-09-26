@@ -140,5 +140,21 @@ const Store = {
     const { data, error } = await db.from("credit_emi").select("*");
     if (error) throw new Error("Could not load EMI details.");
     return data || [];
+  },
+
+  async getUnbilledAmounts() {
+    const { data, error } = await db.from("unbilled_amounts").select("*");
+    if (error) throw new Error("Could not load unbilled amounts.");
+    const map = {};
+    (data || []).forEach(r => (map[r.card] = Number(r.amount)));
+    return map;
+  },
+
+  async setUnbilledAmount(card, amount) {
+    const { error } = await db.from("unbilled_amounts").upsert(
+      { card, amount, updated_at: new Date().toISOString() },
+      { onConflict: "card" }
+    );
+    if (error) throw new Error("Could not save the unbilled amount.");
   }
 };

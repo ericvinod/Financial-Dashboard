@@ -14,6 +14,10 @@ const CATEGORIES = [
 
 const PAID_BY = ["Cash/GPAY", "Amazon Pay ICICI", "SBI", "HDFC Swiggy", "Others"];
 
+// The subset of payment modes that are actual credit cards with a billing
+// cycle (used for the "Unbilled amount" panel).
+const CREDIT_CARDS = ["Amazon Pay ICICI", "SBI", "HDFC Swiggy"];
+
 // Category colors, carried over from the original tracker's color-coding
 // and extended so every category has its own distinct color.
 const CATEGORY_COLORS = {
