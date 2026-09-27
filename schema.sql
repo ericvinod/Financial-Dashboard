@@ -69,12 +69,20 @@ create table if not exists unbilled_amounts (
   updated_at timestamptz not null default now()
 );
 
+-- Monthly budget per payment mode (separate from the per-category budget
+-- above), shown in the Credit Card Statement Analysis tab.
+create table if not exists payment_mode_budgets (
+  paid_by text primary key,
+  amount numeric not null default 0
+);
+
 alter table income enable row level security;
 alter table budgets enable row level security;
 alter table expenses enable row level security;
 alter table recurring_expenses enable row level security;
 alter table credit_emi enable row level security;
 alter table unbilled_amounts enable row level security;
+alter table payment_mode_budgets enable row level security;
 
 -- Single-user setup: allow the anon key full access.
 -- Tighten these policies if you add real authentication later.
@@ -91,6 +99,8 @@ drop policy if exists "anon full access" on credit_emi;
 create policy "anon full access" on credit_emi for all using (true) with check (true);
 drop policy if exists "anon full access" on unbilled_amounts;
 create policy "anon full access" on unbilled_amounts for all using (true) with check (true);
+drop policy if exists "anon full access" on payment_mode_budgets;
+create policy "anon full access" on payment_mode_budgets for all using (true) with check (true);
 
 -- Seed the budget baseline (from your original tracker)
 insert into budgets (category, amount) values
@@ -106,6 +116,15 @@ insert into budgets (category, amount) values
   ('WiFi', 1200),
   ('NOT Budgeted', 0)
 on conflict (category) do nothing;
+
+-- Seed a zero payment-mode budget baseline (edit these later as needed)
+insert into payment_mode_budgets (paid_by, amount) values
+  ('Cash/GPAY', 0),
+  ('Amazon Pay ICICI', 0),
+  ('SBI', 0),
+  ('HDFC Swiggy', 0),
+  ('Others', 0)
+on conflict (paid_by) do nothing;
 
 -- Seed this month's income baseline (only if it isn't already there)
 insert into income (month, source, amount)
