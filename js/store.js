@@ -156,5 +156,21 @@ const Store = {
       { onConflict: "card" }
     );
     if (error) throw new Error("Could not save the unbilled amount.");
+  },
+
+  async getPaymentModeBudgets() {
+    const { data, error } = await db.from("payment_mode_budgets").select("*");
+    if (error) { console.warn("payment_mode_budgets unavailable:", error.message); return {}; }
+    const map = {};
+    (data || []).forEach(r => (map[r.paid_by] = Number(r.amount)));
+    return map;
+  },
+
+  async setPaymentModeBudget(paidBy, amount) {
+    const { error } = await db.from("payment_mode_budgets").upsert(
+      { paid_by: paidBy, amount },
+      { onConflict: "paid_by" }
+    );
+    if (error) throw new Error("Could not save the budget.");
   }
 };

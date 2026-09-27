@@ -12,12 +12,12 @@ const state = {
 
 function selectMode(mode) {
   state.selectedMode = state.selectedMode === mode ? null : mode;
-  renderDashboard();
+  showTab("dashboard");
 }
 
 function selectCategory(cat) {
   state.selectedCategory = state.selectedCategory === cat ? null : cat;
-  renderDashboard();
+  showTab("dashboard");
 }
 
 function setStatus(text, cls) {
@@ -46,7 +46,7 @@ async function withStatus(fn) {
   }
 }
 
-const TABS = ["dashboard", "history", "recurring", "insights"];
+const TABS = ["dashboard", "analysis", "history", "recurring", "insights"];
 
 function showTab(name) {
   TABS.forEach(t => {
@@ -55,6 +55,7 @@ function showTab(name) {
   });
   document.getElementById("fab").style.display = name === "dashboard" ? "flex" : "none";
   if (name === "dashboard") renderDashboard();
+  if (name === "analysis") renderAnalysis();
   if (name === "history") renderHistory();
   if (name === "recurring") renderRecurring();
   if (name === "insights") renderInsights();
