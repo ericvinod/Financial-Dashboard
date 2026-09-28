@@ -14,7 +14,25 @@ async function renderDashboard() {
   const displayEntries = entries;
 
   const totalIncome = income.reduce((s, r) => s + Number(r.amount), 0);
-  const totalOutflow = displayEntries.reduce((s, e) => s + Number(e.amount), 0);
+
+  // Total Expenses: each credit card counts its manually entered unbilled
+  // amount until its cycle is complete AND a statement has been imported
+  // (entries exist for that cycle); after that, the statement's entries are
+  // used. Non-card modes (Cash/GPAY, Others) always use their entries.
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const cardExpense = {};
+  CREDIT_CARDS.forEach(card => {
+    const cardEntries = displayEntries.filter(e => e.paid_by === card);
+    const [, cycleEnd] = currentCycleRange(card, now);
+    const cycleComplete = todayStart > new Date(cycleEnd.getFullYear(), cycleEnd.getMonth(), cycleEnd.getDate());
+    cardExpense[card] = (cycleComplete && cardEntries.length)
+      ? cardEntries.reduce((s, e) => s + Number(e.amount), 0)
+      : (unbilled[card] || 0);
+  });
+  const gpayTotal = displayEntries.filter(e => e.paid_by === "Cash/GPAY").reduce((s, e) => s + Number(e.amount), 0);
+  const nonCardExpense = displayEntries.filter(e => !CREDIT_CARDS.includes(e.paid_by)).reduce((s, e) => s + Number(e.amount), 0);
+  const totalOutflow = CREDIT_CARDS.reduce((s, c) => s + cardExpense[c], 0) + nonCardExpense;
   const net = totalIncome - totalOutflow;
 
   document.getElementById("stat-income").textContent = money(totalIncome);
@@ -30,12 +48,20 @@ async function renderDashboard() {
       </div>
       <input type="number" step="0.01" value="${unbilled[card] || ""}" placeholder="0"
         onchange="Store.setUnbilledAmount('${card}', parseFloat(this.value) || 0).then(()=>{toast('Saved');renderDashboard();}).catch(err=>toast(err.message))">
-    </div>`).join("");
+    </div>`).join("") + `
+    <div class="cat-row">
+      <div class="cat-head">
+        <span class="cat-name"><span class="dot" style="background:${PAID_BY_COLORS["Cash/GPAY"]}"></span>Cash/GPAY</span>
+        <span class="amounts"><b>${money(gpayTotal)}</b> · total of entries</span>
+      </div>
+    </div>`;
 
   destroyChart("unbilledPie");
+  const unbilledLabels = [...CREDIT_CARDS, "Cash/GPAY"];
+  const unbilledValues = [...CREDIT_CARDS.map(c => unbilled[c] || 0), gpayTotal];
   charts.unbilledPie = new Chart(document.getElementById("chart-unbilled-pie"), {
     type: "pie",
-    data: { labels: CREDIT_CARDS, datasets: [{ data: CREDIT_CARDS.map(c => unbilled[c] || 0), backgroundColor: CREDIT_CARDS.map(c => PAID_BY_COLORS[c]), borderWidth: 0 }] },
+    data: { labels: unbilledLabels, datasets: [{ data: unbilledValues, backgroundColor: unbilledLabels.map(c => PAID_BY_COLORS[c]), borderWidth: 0 }] },
     options: pieOpts()
   });
 

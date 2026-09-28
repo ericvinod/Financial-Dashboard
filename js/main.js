@@ -240,7 +240,7 @@ document.getElementById("import-confirm").addEventListener("click", async () => 
   }
   closeSheet("import-overlay");
   toast(`${state.importDraft.length} entries added`);
-  renderDashboard();
+  renderAnalysis();
 });
 
 // ---------------------------------------------------------------------------
