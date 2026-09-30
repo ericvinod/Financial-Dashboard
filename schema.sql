@@ -114,17 +114,20 @@ insert into budgets (category, amount) values
   ('Vegetable and Groceries', 18000),
   ('Mobile', 1692),
   ('WiFi', 1200),
-  ('NOT Budgeted', 0)
+  ('NOT Budgeted', 0),
+  ('Pushed for Savings', 0)
 on conflict (category) do nothing;
 
--- Seed a zero payment-mode budget baseline (edit these later as needed)
+-- Seed the payment-mode budget baseline (from your original tracker's "Paid
+-- by" column). Uses do update so re-running this script fixes any rows that
+-- were previously seeded at 0.
 insert into payment_mode_budgets (paid_by, amount) values
-  ('Cash/GPAY', 0),
-  ('Amazon Pay ICICI', 0),
-  ('SBI', 0),
-  ('HDFC Swiggy', 0),
+  ('Cash/GPAY', 88000),
+  ('Amazon Pay ICICI', 10892),
+  ('SBI', 13000),
+  ('HDFC Swiggy', 6000),
   ('Others', 0)
-on conflict (paid_by) do nothing;
+on conflict (paid_by) do update set amount = excluded.amount;
 
 -- Seed this month's income baseline (only if it isn't already there)
 insert into income (month, source, amount)
