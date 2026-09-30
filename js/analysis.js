@@ -1,4 +1,49 @@
+// The original uploaded budget tracker, kept here as a fixed reference —
+// shown as-is in the Analysis tab, not editable and not tied to the database.
+const ORIGINAL_BUDGET_SHEET = {
+  income: 217000,
+  expenses: 117892,
+  savings: 99108,
+  rows: [
+    { desc: "Mylai marie agam Primary Loan", category: "Home Loan EMI", paidBy: "Cash/GPAY", amount: 32000 },
+    { desc: "Vinod House", category: "Parents Expenses", paidBy: "Cash/GPAY", amount: 15000 },
+    { desc: "Veena House Rent", category: "Parents Expenses", paidBy: "Cash/GPAY", amount: 16500 },
+    { desc: "Maintanence", category: "Home Expenses", paidBy: "Cash/GPAY", amount: 2000 },
+    { desc: "Milk", category: "Home Expenses", paidBy: "Cash/GPAY", amount: 700 },
+    { desc: "Veena Dad", category: "Parents Expenses", paidBy: "Cash/GPAY", amount: 5000 },
+    { desc: "Non-Veg", category: "Non-veg", paidBy: "Cash/GPAY", amount: 4000 },
+    { desc: "Giggle whiz phonics class", category: "Rachael", paidBy: "Cash/GPAY", amount: 2000 },
+    { desc: "Theater Class", category: "Rachael", paidBy: "Cash/GPAY", amount: 1800 },
+    { desc: "Auto school pickup", category: "Rachael", paidBy: "Cash/GPAY", amount: 6000 },
+    { desc: "Vinod dad medicine pharmeasy", category: "Parents Expenses", paidBy: "Cash/GPAY", amount: 2000 },
+    { desc: "Ironing", category: "Home Expenses", paidBy: "Cash/GPAY", amount: 1000 },
+    { desc: "Petrol", category: "Home Expenses", paidBy: "Amazon Pay ICICI", amount: 8000 },
+    { desc: "Vegetables", category: "Vegetable and Groceries", paidBy: "HDFC Swiggy", amount: 6000 },
+    { desc: "Groceries both for us, and veena house", category: "Vegetable and Groceries", paidBy: "SBI", amount: 12000 },
+    { desc: "Veena dad liquor", category: "Parents Expenses", paidBy: "SBI", amount: 1000 },
+    { desc: "Jio ( Eric & Veena)", category: "Mobile", paidBy: "Amazon Pay ICICI", amount: 600 },
+    { desc: "Airtel (Eric & Veena)", category: "Mobile", paidBy: "Amazon Pay ICICI", amount: 1092 },
+    { desc: "ACT Wifi", category: "WiFi", paidBy: "Amazon Pay ICICI", amount: 1200 }
+  ]
+};
+
+function renderBudgetSheet() {
+  document.getElementById("budget-sheet-rows").innerHTML = ORIGINAL_BUDGET_SHEET.rows.map(r => `
+    <div class="bill-item">
+      <div>
+        ${escapeHtml(r.desc)}
+        <div class="when">${r.category} · ${r.paidBy}</div>
+      </div>
+      <div><b>${money(r.amount)}</b></div>
+    </div>`).join("");
+  document.getElementById("bs-income").textContent = money(ORIGINAL_BUDGET_SHEET.income);
+  document.getElementById("bs-expenses").textContent = money(ORIGINAL_BUDGET_SHEET.expenses);
+  document.getElementById("bs-savings").textContent = money(ORIGINAL_BUDGET_SHEET.savings);
+}
+
 async function renderAnalysis() {
+  renderBudgetSheet();
+
   const [allEntries, budgets, paymentBudgets] = await Promise.all([
     Store.listAllExpenses(),
     Store.getBudgets(),

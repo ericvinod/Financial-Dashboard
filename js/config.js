@@ -9,7 +9,8 @@ const db = window.supabase.createClient(DB_URL, DB_KEY);
 // ---- Fixed vocabularies ----------------------------------------------------
 const CATEGORIES = [
   "Parents Expenses", "Home Expenses", "Home Loan EMI", "Milk", "Non-veg",
-  "Rachael", "Petrol", "Vegetable and Groceries", "Mobile", "WiFi", "NOT Budgeted"
+  "Rachael", "Petrol", "Vegetable and Groceries", "Mobile", "WiFi", "NOT Budgeted",
+  "Pushed for Savings"
 ];
 
 const PAID_BY = ["Cash/GPAY", "Amazon Pay ICICI", "SBI", "HDFC Swiggy", "Others"];
@@ -31,7 +32,8 @@ const CATEGORY_COLORS = {
   "Vegetable and Groceries": "#FFC000",
   "Mobile": "#FFEB3B",
   "WiFi": "#00B050",
-  "NOT Budgeted": "#8892A0"
+  "NOT Budgeted": "#8892A0",
+  "Pushed for Savings": "#2E8B8B"
 };
 
 const PAID_BY_COLORS = {
