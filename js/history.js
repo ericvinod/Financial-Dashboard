@@ -11,6 +11,8 @@ async function renderHistory() {
   });
   const months = Object.keys(byMonth).sort();
 
+  renderSavedByMonth(byMonth, months);
+
   const trendBox = document.getElementById("history-trend-wrap");
   const listBox = document.getElementById("history-list");
 
@@ -64,6 +66,47 @@ async function renderHistory() {
   if (openMonth && byMonth[openMonth]) renderMonthDetail(openMonth, byMonth[openMonth]);
 }
 
+const MONTH_SLICE_COLORS = ["#2DD9C4", "#4C8DFF", "#F97362", "#FFC107", "#8BD156", "#FF6FB0", "#7030A0", "#F0B94A"];
+
+function renderSavedByMonth(byMonth, months) {
+  const wrap = document.getElementById("saved-trend-wrap");
+  const savedByMonthKey = {};
+  months.forEach(m => {
+    const total = byMonth[m].filter(e => e.category === "Saved").reduce((s, e) => s + Number(e.amount), 0);
+    if (total > 0) savedByMonthKey[m] = total;
+  });
+  const savedMonths = Object.keys(savedByMonthKey).sort();
+
+  destroyChart("savedByMonth");
+  if (!savedMonths.length) {
+    wrap.querySelector(".chart-wrap").style.display = "none";
+    document.getElementById("saved-rows").innerHTML = `<p class="progress-note">No "Saved" entries logged in previous months yet.</p>`;
+    return;
+  }
+  wrap.querySelector(".chart-wrap").style.display = "block";
+
+  const colors = savedMonths.map((_, i) => MONTH_SLICE_COLORS[i % MONTH_SLICE_COLORS.length]);
+  charts.savedByMonth = new Chart(document.getElementById("chart-saved-pie"), {
+    type: "bar",
+    data: { labels: savedMonths.map(monthLabel), datasets: [{ data: savedMonths.map(m => savedByMonthKey[m]), backgroundColor: colors, borderWidth: 0 }] },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: "#9FBAC2", font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: "#9FBAC2", font: { size: 10 } }, grid: { color: "rgba(159,186,194,0.1)" } }
+      }
+    }
+  });
+
+  document.getElementById("saved-rows").innerHTML = savedMonths.map((m, i) => `
+    <div class="cat-row">
+      <div class="cat-head">
+        <span class="cat-name"><span class="dot" style="background:${colors[i]}"></span>${monthLabel(m)}</span>
+        <span class="amounts"><b>${money(savedByMonthKey[m])}</b></span>
+      </div>
+    </div>`).join("");
+}
 function toggleMonth(m) {
   const detail = document.getElementById("detail-" + m);
   const pill = document.getElementById("pill-" + m);

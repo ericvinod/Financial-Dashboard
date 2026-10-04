@@ -10,7 +10,7 @@ const db = window.supabase.createClient(DB_URL, DB_KEY);
 const CATEGORIES = [
   "Parents Expenses", "Home Expenses", "Home Loan EMI", "Milk", "Non-veg",
   "Rachael", "Petrol", "Vegetable and Groceries", "Mobile", "WiFi", "NOT Budgeted",
-  "Pushed for Savings"
+  "Saved"
 ];
 
 const PAID_BY = ["Cash/GPAY", "Amazon Pay ICICI", "SBI", "HDFC Swiggy", "Others"];
@@ -33,7 +33,7 @@ const CATEGORY_COLORS = {
   "Mobile": "#FFEB3B",
   "WiFi": "#00B050",
   "NOT Budgeted": "#8892A0",
-  "Pushed for Savings": "#2E8B8B"
+  "Saved": "#2E8B8B"
 };
 
 const PAID_BY_COLORS = {
@@ -74,14 +74,21 @@ const CYCLE_RULES = {
 
 // Returns [start, end] Date objects (inclusive) for the given payment mode's
 // cycle that belongs to the calendar month `today` falls in — e.g. for SBI
-// (cutoff 12) in September, that's always 12 Aug → 12 Sep, whether today is
-// Sep 1 or Sep 30. This is anchored to the calendar month, not a rolling
-// window from today's exact day.
+// (cutoff 12) in September, that's 13 Aug → 12 Sep, whether today is Sep 1
+// or Sep 30 (anchored to the calendar month, not a rolling window from
+// today's exact day). The cutoff day itself belongs only to the cycle it
+// closes — never also to the cycle that opens right after it — so an entry
+// dated on the cutoff day can't appear as "current" again once the calendar
+// rolls into the next month. This also matches the real statement period
+// (e.g. SBI's own statement reads "13 Aug 26 to 12 Sep 26").
 function currentCycleRange(paidBy, today = new Date()) {
   const cutoff = CYCLE_RULES[paidBy];
   const y = today.getFullYear(), m = today.getMonth();
   if (cutoff === undefined) return [new Date(y, m, 1), new Date(y, m + 1, 0)]; // plain calendar month
-  return [new Date(y, m - 1, cutoff), new Date(y, m, cutoff)];
+  const end = new Date(y, m, cutoff);
+  const start = new Date(y, m - 1, cutoff);
+  start.setDate(start.getDate() + 1);
+  return [start, end];
 }
 
 // Is this entry inside its own payment mode's *current* billing cycle?
