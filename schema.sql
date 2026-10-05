@@ -115,7 +115,8 @@ insert into budgets (category, amount) values
   ('Mobile', 1692),
   ('WiFi', 1200),
   ('NOT Budgeted', 0),
-  ('Saved', 0)
+  ('Saved', 0),
+  ('Credit card Bill Payment', 0)
 on conflict (category) do nothing;
 
 -- Seed the payment-mode budget baseline (from your original tracker's "Paid
