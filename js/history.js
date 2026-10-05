@@ -153,6 +153,16 @@ function renderMonthDetail(m, rows) {
     <div class="panel">
       <h3>By week</h3>
       <div class="chart-wrap small"><canvas id="week-${m}"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Entries</h3>
+      ${rows.slice().sort((a, b) => b.entry_date.localeCompare(a.entry_date)).map(e => `
+        <div class="entry" style="border-left-color:${CATEGORY_COLORS[e.category] || "#888"}">
+          <div class="row1"><span class="desc">${escapeHtml(e.description)}</span><span class="amt">${money(e.amount)}</span></div>
+          <div class="meta"><span>${e.category}</span><span>·</span><span>${e.paid_by}</span><span>·</span><span>${e.entry_date}</span></div>
+          ${e.bill_url ? `<div style="margin-top:6px"><a class="bill-link" target="_blank" href="${e.bill_url}">📎 ${e.bill_type === "image" ? "View bill photo" : "View bill"}</a></div>` : ""}
+          <div class="actions"><button onclick='openEntrySheet(${JSON.stringify(e).replace(/'/g, "&#39;")})'>Edit</button></div>
+        </div>`).join("")}
     </div>`;
 
   new Chart(document.getElementById("pie-" + m), {

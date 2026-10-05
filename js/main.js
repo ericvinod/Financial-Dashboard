@@ -123,6 +123,17 @@ document.getElementById("f-drivelink").addEventListener("input", e => {
   }
 });
 
+// After saving/deleting an entry, refresh the Dashboard and, if a History
+// month is currently expanded, refresh that in place too (without collapsing it).
+function refreshAfterEntryChange() {
+  renderDashboard();
+  if (typeof openMonth !== "undefined" && openMonth) {
+    Store.listAllExpenses().then(all =>
+      renderMonthDetail(openMonth, all.filter(e => cycleMonthKey(e.entry_date, e.paid_by) === openMonth))
+    );
+  }
+}
+
 document.getElementById("entry-form").addEventListener("submit", async e => {
   e.preventDefault();
   const payload = {
@@ -142,7 +153,7 @@ document.getElementById("entry-form").addEventListener("submit", async e => {
   });
   closeSheet("entry-overlay");
   toast(state.editingId ? "Entry updated" : "Entry added");
-  renderDashboard();
+  refreshAfterEntryChange();
 });
 
 document.getElementById("entry-delete").addEventListener("click", async () => {
@@ -151,7 +162,7 @@ document.getElementById("entry-delete").addEventListener("click", async () => {
   await withStatus(() => Store.deleteExpense(state.editingId));
   closeSheet("entry-overlay");
   toast("Entry deleted");
-  renderDashboard();
+  refreshAfterEntryChange();
 });
 
 // ---------------------------------------------------------------------------

@@ -10,7 +10,7 @@ const db = window.supabase.createClient(DB_URL, DB_KEY);
 const CATEGORIES = [
   "Parents Expenses", "Home Expenses", "Home Loan EMI", "Milk", "Non-veg",
   "Rachael", "Petrol", "Vegetable and Groceries", "Mobile", "WiFi", "NOT Budgeted",
-  "Saved"
+  "Saved", "Credit card Bill Payment"
 ];
 
 const PAID_BY = ["Cash/GPAY", "Amazon Pay ICICI", "SBI", "HDFC Swiggy", "Others"];
@@ -33,7 +33,8 @@ const CATEGORY_COLORS = {
   "Mobile": "#FFEB3B",
   "WiFi": "#00B050",
   "NOT Budgeted": "#8892A0",
-  "Saved": "#2E8B8B"
+  "Saved": "#2E8B8B",
+  "Credit card Bill Payment": "#E07A5F"
 };
 
 const PAID_BY_COLORS = {
